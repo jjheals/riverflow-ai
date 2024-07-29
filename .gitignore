@@ -1,3 +1,10 @@
-data/
-clean_data/
+data/normalized_pngs/*
+data/segmented_avis/*
+data/segmented_pngs/*
+data/txt_files
+data/gif_outputs/*.csv
+data/dataset/*
+data/test/*
+data/train/*
+model/test.ipynb
 *__pycache__*

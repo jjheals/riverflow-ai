@@ -1,0 +1,16 @@
+{
+    "seg-pngs-dir": "data/segmented_pngs",
+    "dataset-path": "data/dataset/dataset.npy",
+    "train-dataset-path": "data/dataset/train_dataset.npy",
+    "val-dataset-path": "data/dataset/val_dataset.npy",
+    "output-model-path": "model/trained_models/trained_model-no-callbacks.keras",
+    "output-dir": "data/gif_outputs",
+    "image-width": 128,
+    "image-height": 128,
+    "train-split": 0.8,
+    "hyperparams": {
+        "epochs": 10,
+        "batch-size": 3
+    },
+    "num-frames-predict": 15
+}
