@@ -1,13 +1,10 @@
 import numpy as np
 import tensorflow as tf 
 import json 
-
+from keras import layers
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import ConvLSTM2D, BatchNormalization, Conv3D
 from tensorflow.keras.optimizers import Adam
-
-from keras.callbacks import EarlyStopping, ReduceLROnPlateau
-from keras import layers
 
 from _utils import load_data, create_shifted_frames
 
@@ -40,6 +37,7 @@ else:
 # Load the dataset from disk
 train_dataset:np.ndarray = load_data(config['train-dataset-path'])
 val_dataset:np.ndarray = load_data(config['val-dataset-path'])
+
 # Create the X and y sets by shifting the frames 
 X_train, y_train = create_shifted_frames(train_dataset)
 X_val, y_val = create_shifted_frames(val_dataset)

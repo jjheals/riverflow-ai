@@ -10,8 +10,8 @@ with open('config/config.json', 'r') as file:
 # Recreate the dataset using the PNGs
 print(f'\033[92mLoading PNGs from "{config["seg-pngs-dir"]}"...\033[0m')
 
-img_size = (config['image-width'], config['image-height'])  
-sequences = create_dataset_from_folders(config["seg-pngs-dir"], img_size)
+img_size:tuple[int, int] = (config['image-width'], config['image-height'])  
+sequences:list = create_dataset_from_folders(config["seg-pngs-dir"], img_size)
 padded_sequences = pad_sequences_to_same_length(sequences)
 
 dataset = np.array(padded_sequences)
