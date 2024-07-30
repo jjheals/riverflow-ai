@@ -1,6 +1,6 @@
 import numpy as np 
 import pandas as pd
-from _utils import load_data
+from _utils import load_data, z_score_scale_frames
 import json 
 import os 
 from PIL import Image
@@ -14,10 +14,14 @@ with open('config/config.json', 'r') as file:
     config:dict = json.load(file)
     
 output_dir:str = config['output-dir']
+gif_output_dir:str = os.path.join(output_dir, 'gifs')
+csv_output_dir:str = os.path.join(output_dir, 'csvs')
 num_frames_predict:int = config['num-frames-predict']
 
-# Create the output dir if it does not exist 
+# Create the output dirs if they does not exist 
 os.makedirs(output_dir, exist_ok=True)
+os.makedirs(csv_output_dir, exist_ok=True)
+os.makedirs(gif_output_dir, exist_ok=True)
 
 
 # ----- Load the model & val data ----- #
@@ -38,10 +42,10 @@ example = val_dataset[np.random.choice(range(len(val_dataset)), size=1)[0]]
 frames = example[:num_frames_predict]
 
 # Write the truth frames for comparison
-truth_frames_filename:str = 'example_TRUTH.gif'
+truth_frames_filename:str = 'example_TRUTH4.gif'
 truth_frames = np.squeeze(frames)
 truth_frames = (truth_frames * 255).astype(np.uint8)
-truth_gif_path = os.path.join(output_dir, truth_frames_filename)
+truth_gif_path = os.path.join(gif_output_dir, truth_frames_filename)
 
 with open(truth_gif_path, 'wb') as truth_gif_file:
     imageio.mimsave(truth_gif_file, truth_frames, 'GIF', duration=1000)
@@ -63,11 +67,15 @@ print(f'predicted_Frames.shape (after squeezing new_predictions) = {predicted_fr
 # Convert predicted frames to uint8 and ensure correct format
 predicted_frames = (predicted_frames * 255).astype(np.uint8)
 
+# Scale predicted frames using Z-scores to get an image that is closer to black and white instead of a 
+# shade of grey
+predicted_frames = z_score_scale_frames(predicted_frames)
+
 # Save predicted frames as a GIF using PIL
-predicted_gif_path = os.path.join(output_dir, 'predicted_frames.gif')
+predicted_gif_path = os.path.join(gif_output_dir, 'predicted_frames4.gif')
 images = [Image.fromarray(frame.squeeze().squeeze(), 'L') for frame in predicted_frames]  # Use 'L' mode for grayscale
 images[0].save(predicted_gif_path, save_all=True, append_images=images[1:], duration=1000, loop=0)
-print(f'\033[93mNOTICE: \033[90mSaved output gifs to {output_dir}\033[0m\n')
+print(f'\033[93mNOTICE: \033[90mSaved output gifs to {gif_output_dir}\033[0m\n')
 
 
 # ----- Save Frames as CSV ----- #
@@ -77,7 +85,7 @@ for i, frame in enumerate(predicted_frames):
     
     # Define the CSV filename
     csv_filename = f'predicted_frame_{i}.csv'
-    csv_path = os.path.join(output_dir, csv_filename)
+    csv_path = os.path.join(csv_output_dir, csv_filename)
     
     # Save DataFrame to CSV
     df.to_csv(csv_path, index=False, header=False)
@@ -91,7 +99,7 @@ for i, frame in enumerate(truth_frames):
     
     # Define the CSV filename
     csv_filename = f'truth_frame_{i}.csv'
-    csv_path = os.path.join(output_dir, csv_filename)
+    csv_path = os.path.join(csv_output_dir, csv_filename)
     
     # Save DataFrame to CSV
     df.to_csv(csv_path, index=False, header=False)

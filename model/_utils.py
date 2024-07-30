@@ -83,3 +83,19 @@ def pad_sequences_to_same_length(sequences:Iterable):
     max_length = max(len(seq) for seq in sequences)
     padded_sequences = pad_sequences(sequences, maxlen=max_length, padding='post', dtype='float64')
     return padded_sequences
+
+
+def z_score_scale_frames(frames:np.ndarray) -> np.ndarray: 
+    # Scale predicted frames using Z-scores
+    mean = np.mean(frames)
+    std = np.std(frames)
+    frames = (frames - mean) / std
+
+    # Clip values at the mean to make the contrast exactly [0, 1] which will scale to [0, 255]
+    clip_value:float = np.mean(frames)
+    frames = np.clip(frames, -clip_value, clip_value)
+
+    # Scale back to 0-255 range
+    frames = ((frames - frames.min()) / (frames.max() - frames.min()) * 255).astype(np.uint8)
+    
+    return frames
