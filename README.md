@@ -49,6 +49,7 @@ The default config file contains the following settings:
 ## Workflow 
 
 To use the model, the workflow is as follows: 
+
 0. [Clean the data](#cleaning)
 1. [Segmentation](#segmentation)
 2. [Construct the dataset](#construct-the-dataset)
