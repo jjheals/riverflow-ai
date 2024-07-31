@@ -42,7 +42,8 @@ The default config file contains the following settings:
         "epochs": 10,
         "batch-size": 3
     },
-    "num-frames-predict": 15
+    "num-frames-predict": 15,
+    "num-predictions": 10
 }
 ```
 
