@@ -109,7 +109,7 @@ The trained model will be written to a .keras folder at the path defined in the 
 
 ## Test the Model
 
-[Testing the model](model/3-test_model.py) reads in the validation set and selects [num-predictions] random rivers, and for each river predicts the next [num-frames-predict] frames. 
+[Testing the model](model/4-test_model.py) reads in the validation set and selects [num-predictions] random rivers, and for each river predicts the next [num-frames-predict] frames. 
 
 The outputs are written to the [output-dir] in the following format, where N is in the range [0, num-predictions) and i is in the range [0, num-frames-predict): 
 
@@ -126,7 +126,23 @@ output-dir/
 │       └── predicted_frames_N.gif
 ├── ...
 ```
+### Notes about model testing 
+
+There are three primary issues with the model that came up in testing; the [4-test_model.py](model/4-test_model.py) has been altered to account for these issues, but they are still important to discuss. We believe all these issues stem from the fact that all the sequences of river images are padded to be of a consistent length, and as a result, when the model predicts a sequence, it thinks the previous sequence ends with all white frames and that there are more "white" values than there actually should be.
+
+The first issue that arises because of this padding is that the model consistently predicts all white frames for the first 4-5 frames of a predicted sequence. We accounted for this by dropping the first IDX_TRIM frames (set to 5 in the code, but can be altered) from the predicted frames AND truth frames, and increasing the number of frames to predict by IDX_TRIM frames as well. This way, the model drops the first IDX_TRIM frames from the beginning but predicts IDX_TRIM extra frames at the end, effectively ending with the same amount of frames as if this trimming was not applied.
+
+The second issue stems from the same fundamental issue with padded sequences, and is that the model was predicting frames that were a shade of grey, rather than values close to 0 or 255 for each pixel. We accounted for this by using z-score scaling to scale the pixel values in each frame to 0 or 255 depending on their distance from the mean (e.g. values < mean go to 0, values > mean go to 255). This creates a predicted frame that consists of pixels with a binary value of 0 or 255; however, to accurately test the model's performance with this alteration, we had to also scale the truth frames using the same method, which caused some ambiguity in the results, since the evaluation measures, such as precision, are now slightly skewed (likely in favor of the model).
+
+The third issue with the model's performance is that it occasionally would predict a sequence of frames that were all black. We believe this stems from the same issue regarding padding sequences, where when the model predicted a sequence, it would get "stuck" at a local minima and an all black prediction would be the "statistically most accurate" sequence. To counter this, we added a conditional in the test model script that checks if all the predicted frames in a sequence are black, and if they are, it throws out that sample and picks a new sample of num_frames_predict frames to test. 
 
 ## Evaluate Performance
 
-TBD
+The [5-evaluate-performance.py](model/5-evaluate-performance.py) script evaluates the performance of the model using four measures: 
+
+* Precision
+* Recall
+* F1 Score
+* Matthew's Correlation Coefficient (MCC) 
+
+The eval performance script prints the score for each individual frame, then prints the average across all frames for each of the four measures. 
