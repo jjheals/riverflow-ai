@@ -1,14 +1,34 @@
 import os
 import pandas as pd
+import json
 from sklearn.metrics import precision_score, recall_score, f1_score, matthews_corrcoef
 
-# Define the paths to the folders
-ground_truth_folder = 'C:\\Users\\Adam\\Documents\\SCHOOL\\WPI\\CS534\\pythonProject\\Results\\Truth'
-predicted_folder = 'C:\\Users\\Adam\\Documents\\SCHOOL\\WPI\\CS534\\pythonProject\\Results\\Predictions'
 
-# Get the list of files in each folder
-ground_truth_files = sorted(os.listdir(ground_truth_folder))
-predicted_files = sorted(os.listdir(predicted_folder))
+# ---- Config ---- # 
+with open('config/config.json', 'r') as file:
+    config:dict = json.load(file)
+
+output_dir:str = config['output-dir']
+
+
+# ---- Loading data ----- # 
+# Get all of the truth and prediction files 
+ground_truth_files:list[str] = []
+predicted_files:list[str] = []
+
+for run_dir in os.listdir(output_dir): 
+    # We only care about the 'csvs' subdir 
+    this_csv_dir_path:str = os.path.join(output_dir, run_dir, 'csvs')
+    
+    for csv_file in os.listdir(this_csv_dir_path):
+        if 'truth' in csv_file: ground_truth_files.append(os.path.join(this_csv_dir_path, csv_file))
+        elif 'predicted' in csv_file: predicted_files.append(os.path.join(this_csv_dir_path, csv_file))
+
+with open('gt-tmp.json', 'w+') as file:
+    json.dump(ground_truth_files, file, indent=4)
+    
+with open('pd-tmp.json', 'w+') as file: 
+    json.dump(predicted_files, file, indent=4)
 
 # Initialize lists to store results
 precisions = []
@@ -17,13 +37,10 @@ f1_scores = []
 mcc_scores = []
 
 # Loop through each pair of files
-for gt_file, pred_file in zip(ground_truth_files, predicted_files):
-    gt_path = os.path.join(ground_truth_folder, gt_file)
-    pred_path = os.path.join(predicted_folder, pred_file)
-
-    # Load the CSV files
-    ground_truth = pd.read_csv(gt_path)
-    predicted = pd.read_csv(pred_path)
+for gt_file_path, pred_file_path in zip(ground_truth_files, predicted_files):
+    
+    ground_truth = pd.read_csv(gt_file_path)
+    predicted = pd.read_csv(pred_file_path)
 
     # Flatten the labels
     y_true = ground_truth.values.flatten()
@@ -46,11 +63,11 @@ for gt_file, pred_file in zip(ground_truth_files, predicted_files):
     mcc_scores.append(mcc)
 
     # Print results for each pair (optional)
-    print(f'Results for {gt_file} and {pred_file}:')
-    print(f'Precision: {precision}')
-    print(f'Recall: {recall}')
-    print(f'F1 Score: {f1}')
-    print(f'MCC: {mcc}')
+    print(f'\033[90mResults for \033[92m{os.path.basename(gt_file_path)} \033[90mand \033[92m{os.path.basename(pred_file_path)}\033[90m:')
+    print(f'\033[92mPrecision: \033[90m{precision}')
+    print(f'\033[92mRecall: \033[90m{recall}')
+    print(f'\033[92mF1 Score: \033[90m{f1}')
+    print(f'\033[92mMCC: \033[90m{mcc}')
     print()
 
 # Calculate the average of each metric
@@ -61,7 +78,9 @@ avg_mcc = sum(mcc_scores) / len(mcc_scores)
 
 
 # Print the average results
-print('Average Precision:', avg_precision)
-print('Average Recall:', avg_recall)
-print('Average F1 Score:', avg_f1)
-print('Average MCC:', avg_mcc)
+print('\033[93m--- Average Results ---\033[90m')
+print('\033[92mAverage Precision:\033[90m', avg_precision)
+print('\033[92mAverage Recall:\033[90m', avg_recall)
+print('\033[92mAverage F1 Score:\033[90m', avg_f1)
+print('\033[92mAverage MCC:\033[90m', avg_mcc)
+print('\033[0m')
