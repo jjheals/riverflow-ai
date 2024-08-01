@@ -76,7 +76,7 @@ TBD
 
 ## Construct the Dataset
 
-After cleaning the data, the first step is to construct the dataset from the images and conduct the necessary preprocessing. This is done by the [1-construct_dataset.py](model/1-construct_dataset.py) script in the [model](model/) folder. 
+After cleaning the data, the first step is to construct the dataset from the images and conduct the necessary preprocessing. This is done by the [1-construct_dataset.py](model/2-construct_dataset.py) script in the [model](model/) folder. 
 
 *Note: This process was split from the training phase because, depending on the size of the dataset and computational power available, it can take a very long time.*
 
@@ -91,7 +91,7 @@ This script reads in the segmented PNGs from the path specified in the [config J
 
 ## Train the Model
 
-The [training step](model/2-train_model.py) reads in the train and val datasets created by the [previous step](#construct-the-dataset) and trains the Convolutional LSTM model. The model has six layers: 
+The [training step](model/3-train_model.py) reads in the train and val datasets created by the [previous step](#construct-the-dataset) and trains the Convolutional LSTM model. The model has six layers: 
 * 2D ConvLSTM 
 * Batch Normalization
 * 2D ConvLSTM 
