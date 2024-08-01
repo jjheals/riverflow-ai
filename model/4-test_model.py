@@ -17,6 +17,14 @@ output_dir:str = config['output-dir']
 num_frames_predict:int = config['num-frames-predict']
 num_predictions:int = config['num-predictions'] 
 
+# NOTE: to be able to accurately score the model, we have to cut the first 5 frames from the prediction because all predictions have 
+# the first five frames as white - this is an issue that comes from the padding of sequence lengths, but is consistent with all 
+# predictions. This also means we will have to cut the first 5 frames off the truth frames as well. To compensate, we increase the
+# num_frames_predict by this value as well; this way, we cut IDX_TRIM frames off the beginning of the truth and predicted sequences
+# but we still have num_frames_predict frames.
+IDX_TRIM:int = 5
+num_frames_predict += IDX_TRIM
+
 # Create the output dirs if they does not exist 
 os.makedirs(output_dir, exist_ok=True)
 
@@ -32,7 +40,33 @@ val_dataset:np.ndarray = load_data(config['val-dataset-path'])
 # ----- PREDICTIONS ----- #
 print("\033[93mNOTICE: \033[90mPredictions Start\033[0m")
 
-for n in range(0, num_predictions): 
+n:int = 0
+while n < num_predictions: 
+    
+    # Select a random example from the validation dataset
+    example = val_dataset[np.random.choice(range(len(val_dataset)), size=1)[0]]
+    
+    # Extract frames for prediction and add batch dim
+    frames = example[:num_frames_predict]
+    frames_input = np.expand_dims(frames, axis=0)  # Shape will be (1, num_frames_predict, height, width, channels)
+    
+    # Predict the next frames
+    new_predictions = model.predict(frames_input)
+    
+    # Remove batch dimension
+    predicted_frames = np.squeeze(new_predictions, axis=0)  # Shape will be (num_frames_predict, height, width, channels)
+
+    # Convert predicted frames to uint8 and ensure correct format
+    predicted_frames = (predicted_frames * 255).astype(np.uint8)
+
+    # Scale predicted frames using Z-scores to get an image that is closer to black and white instead of a shade of grey
+    predicted_frames = z_score_scale_frames(predicted_frames)[IDX_TRIM:]
+    
+    # Check if all black prediction
+    if not predicted_frames.any():
+        #print(f'\033[91mERROR: \033[90mall black prediction for run {n}\033[0m')
+        continue 
+    
     print(f'\n\033[92mMaking prediction {n}/{num_predictions}')
     
     # Construct an output dir for this prediction/truth pair
@@ -46,41 +80,18 @@ for n in range(0, num_predictions):
     os.makedirs(gif_output_dir, exist_ok=True)
     os.makedirs(csv_output_dir, exist_ok=True) 
     
-    # Select a random example from the validation dataset.
-    example = val_dataset[np.random.choice(range(len(val_dataset)), size=1)[0]]
-
-    # Extract frames for prediction
-    frames = example[:num_frames_predict]
-
     # Write the truth frames for comparison
     truth_frames_filename:str = f'example_TRUTH_{n}.gif'
     truth_frames = np.squeeze(frames)
     truth_frames = (truth_frames * 255).astype(np.uint8)
+    truth_frames = z_score_scale_frames(truth_frames)
+    
     truth_gif_path = os.path.join(gif_output_dir, truth_frames_filename)
 
     with open(truth_gif_path, 'wb') as truth_gif_file:
         imageio.mimsave(truth_gif_file, truth_frames, 'GIF', duration=1000)
 
     print(f'\033[93mNOTICE: \033[90mSaved the truth frames ({len(truth_frames)}) to "{truth_gif_path}')
-
-    # Add batch dimension
-    frames_input = np.expand_dims(frames, axis=0)  # Shape will be (1, num_frames_predict, height, width, channels)
-    print(f'frames_input.shape (after expanding dims) = {frames_input.shape}')
-
-    # Predict the next frames
-    new_predictions = model.predict(frames_input)
-    print(f'new_predictions.shape (before squeezing) = {new_predictions.shape}')
-
-    # Remove batch dimension
-    predicted_frames = np.squeeze(new_predictions, axis=0)  # Shape will be (num_frames_predict, height, width, channels)
-    print(f'predicted_Frames.shape (after squeezing new_predictions) = {predicted_frames.shape}')
-
-    # Convert predicted frames to uint8 and ensure correct format
-    predicted_frames = (predicted_frames * 255).astype(np.uint8)
-
-    # Scale predicted frames using Z-scores to get an image that is closer to black and white instead of a 
-    # shade of grey
-    predicted_frames = z_score_scale_frames(predicted_frames)
 
     # Save predicted frames as a GIF using PIL
     predicted_gif_path = os.path.join(gif_output_dir, f'predicted_frames_{n}.gif')
@@ -95,24 +106,28 @@ for n in range(0, num_predictions):
         df = pd.DataFrame(np.squeeze(frame))
         
         # Define the CSV filename
-        csv_filename = f'predicted_frame_{i}.csv'
+        csv_filename = f'run_{n}-predicted_frame_{i + IDX_TRIM}.csv'
         csv_path = os.path.join(csv_output_dir, csv_filename)
         
         # Save DataFrame to CSV
         df.to_csv(csv_path, index=False, header=False)
         
-        print(f'\033[93mNOTICE: \033[90mSaved frame {i} to "{csv_path}"\033[0m')
-
+        
     # Save the truth frames to CSV
     for i, frame in enumerate(truth_frames):
+        # NOTE: skip first five frames; see previous comment regarding the model producing all white frames
+        if i < IDX_TRIM: continue 
+        
         # Convert frame to DataFrame
         df = pd.DataFrame(np.squeeze(frame))
         
         # Define the CSV filename
-        csv_filename = f'truth_frame_{i}.csv'
+        csv_filename = f'run_{n}-truth_frame_{i}.csv'
         csv_path = os.path.join(csv_output_dir, csv_filename)
         
         # Save DataFrame to CSV
         df.to_csv(csv_path, index=False, header=False)
         
-        print(f'\033[93mNOTICE: \033[90mSaved frame {i} to "{csv_path}"\033[0m')
+                
+    # Increment n
+    n+=1
