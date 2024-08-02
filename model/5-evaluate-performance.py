@@ -24,11 +24,8 @@ for run_dir in os.listdir(output_dir):
         if 'truth' in csv_file: ground_truth_files.append(os.path.join(this_csv_dir_path, csv_file))
         elif 'predicted' in csv_file: predicted_files.append(os.path.join(this_csv_dir_path, csv_file))
 
-with open('gt-tmp.json', 'w+') as file:
-    json.dump(ground_truth_files, file, indent=4)
-    
-with open('pd-tmp.json', 'w+') as file: 
-    json.dump(predicted_files, file, indent=4)
+ground_truth_files = sorted(ground_truth_files)
+predicted_files = sorted(predicted_files)
 
 # Initialize lists to store results
 precisions = []

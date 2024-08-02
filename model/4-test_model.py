@@ -58,9 +58,10 @@ while n < num_predictions:
 
     # Convert predicted frames to uint8 and ensure correct format
     predicted_frames = (predicted_frames * 255).astype(np.uint8)
-
+    predicted_frames = predicted_frames[IDX_TRIM:]
+    
     # Scale predicted frames using Z-scores to get an image that is closer to black and white instead of a shade of grey
-    predicted_frames = z_score_scale_frames(predicted_frames)[IDX_TRIM:]
+    predicted_frames = z_score_scale_frames(predicted_frames)
     
     # Check if all black prediction
     if not predicted_frames.any():
@@ -84,10 +85,14 @@ while n < num_predictions:
     truth_frames_filename:str = f'example_TRUTH_{n}.gif'
     truth_frames = np.squeeze(frames)
     truth_frames = (truth_frames * 255).astype(np.uint8)
-    truth_frames = z_score_scale_frames(truth_frames)
+    truth_frames = truth_frames[IDX_TRIM:]
     
+    # Z-score the truth frames if configured 
+    if config['z-score-truth-frames']:
+        truth_frames = z_score_scale_frames(truth_frames)
+    
+    # Write truth gif
     truth_gif_path = os.path.join(gif_output_dir, truth_frames_filename)
-
     with open(truth_gif_path, 'wb') as truth_gif_file:
         imageio.mimsave(truth_gif_file, truth_frames, 'GIF', duration=1000)
 
@@ -114,15 +119,12 @@ while n < num_predictions:
         
         
     # Save the truth frames to CSV
-    for i, frame in enumerate(truth_frames):
-        # NOTE: skip first five frames; see previous comment regarding the model producing all white frames
-        if i < IDX_TRIM: continue 
-        
+    for i, frame in enumerate(truth_frames):        
         # Convert frame to DataFrame
         df = pd.DataFrame(np.squeeze(frame))
         
         # Define the CSV filename
-        csv_filename = f'run_{n}-truth_frame_{i}.csv'
+        csv_filename = f'run_{n}-truth_frame_{i + IDX_TRIM}.csv'
         csv_path = os.path.join(csv_output_dir, csv_filename)
         
         # Save DataFrame to CSV

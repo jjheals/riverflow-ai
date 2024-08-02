@@ -2,7 +2,9 @@
 
 Predicting river erosion and path changes is crucial for managing ecological balance, agriculture, and human settlements. This report leverages satellite imagery and state-of-the-art AI methodologies to forecast these changes, aiming to mitigate the devastating effects of riverbank erosion, such as agricultural land loss, infrastructure destruction, water pollution, and community displacement. Current methods, including Convolutional Neural Networks (CNNs), Long Short-Term Memory networks (LSTMs), Vision Transformers (VITs), and Superpixel Transformers, each offer unique advantages and challenges. This project combines Superpixel segmentation and LSTMs to predict river erosion using Google Earth Timelapse Engine videos from 1984 to 2022. Preprocessing involves extracting regions of interest and chronological sorting of images. Superpixel segmentation simplifies the classification problem, while LSTMs handle the temporal aspects of river morphology. The proposed model's performance will be evaluated using accuracy, precision, recall, F1 score, and Matthews correlation coefficient (MCC), with a comparative analysis against traditional CNN models. This approach aims to provide valuable insights for environmental management and disaster prevention, highlighting the potential of AI in predicting and mitigating the impacts of natural disasters.
 
+
 # Usage
+
 
 ## Configuration Settings 
 
@@ -27,6 +29,7 @@ The following table describes each variable in the config file. Note that *all o
 | hyperparams["batch-size"] | int | Batch size for training | 
 | num-frames-predict | int | Number of frames to predict when generating predictions | 
 | num-predictions | int | Number of predictions to make and output to the "output-dir" | 
+| z-score-truth-frames | bool | Specify whether to z-score scale the truth frames to pixel values of binary 0 \| 255; see [test the model](#notes-about-model-testing) section for more discussion about this setting and why it is included/the output effects | 
 
 The default config file contains the following settings: 
 ```json 
@@ -60,19 +63,28 @@ To use the model, the workflow is as follows:
 4. [Test the model](#test-the-model) 
 5. [Evaluate performance](#evaluate-performance)
 
+
 ## Cleaning
+
 
 ### DataCleaner 
 
 The [DataCleaner](./cleaning/DataCleaner.py) class is used to extract the timeframe from an image and to save the image with an appropriate filename to the specified output directory. The [Cleaner.py](./cleaning/Cleaner.py) file implements the DataCleaner. The DataCleaner is not meant to be a fully-functional, universal tool - it was built for a very specific purpose and for this very specific implementation, not a wider application. 
 
+
 ### NameCleaner 
 
 The [NameCleaner](./cleaning/NameCleaner.py) script is a standalone script that, like DataCleaner, is not meant to be a universal tool and was built for this very specific purpose. It simply standardizes and cleans up the filenames of the files in the given input folder. 
 
+
 ## Segmentation 
 
-TBD
+The [1-segmentation.ipynb](model/1-segmentation.ipynb) notebook walks through the segmentation process. 
+
+**Note:** this notebook was developed in Google Colab and does not directly integrate with the rest of this project structure. It is meant to provide a snapshot of the process, not to be universally implemented.
+
+To avoid having to implement the segmentation process yourself, you can download the [segmented_pngs dataset](https://drive.google.com/file/d/1cDMDohsJj10xV_y_AbzXsv0sun4TxXh5/view?usp=sharing) (hosted on Google Drive) that contains all of the segmented PNGs that can be used to train the model. Simply extract the ZIP into the [data/](data/) folder and make sure the [config](#configuration-settings) is set with the correct "seg-pngs-path" variable. 
+
 
 ## Construct the Dataset
 

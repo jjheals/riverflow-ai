@@ -13,5 +13,6 @@
         "batch-size": 3
     },
     "num-frames-predict": 15,
-    "num-predictions": 10
+    "num-predictions": 10,
+    "z-score-truth-frames": true
 }
