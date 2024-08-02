@@ -2,6 +2,17 @@
 
 Predicting river erosion and path changes is crucial for managing ecological balance, agriculture, and human settlements. This report leverages satellite imagery and state-of-the-art AI methodologies to forecast these changes, aiming to mitigate the devastating effects of riverbank erosion, such as agricultural land loss, infrastructure destruction, water pollution, and community displacement. Current methods, including Convolutional Neural Networks (CNNs), Long Short-Term Memory networks (LSTMs), Vision Transformers (VITs), and Superpixel Transformers, each offer unique advantages and challenges. This project combines Superpixel segmentation and LSTMs to predict river erosion using Google Earth Timelapse Engine videos from 1984 to 2022. Preprocessing involves extracting regions of interest and chronological sorting of images. Superpixel segmentation simplifies the classification problem, while LSTMs handle the temporal aspects of river morphology. The proposed model's performance will be evaluated using accuracy, precision, recall, F1 score, and Matthews correlation coefficient (MCC), with a comparative analysis against traditional CNN models. This approach aims to provide valuable insights for environmental management and disaster prevention, highlighting the potential of AI in predicting and mitigating the impacts of natural disasters.
 
+**Authors:** 
+
+@jjheals - Justin Healey (B.S. Computer Science, M.S. Cybersecurity)
+@sam00 - Sam Veilleux (B.S. Mechanical Engineering, M.S. Computer Science)
+@adamisnothere - Adam Veilleux (B.S. Computer Science, M.S. Data Science)
+@colstr22 - Colin Streck (B.S. Mathematics, B.S. Computer Science, M.S. Computer Science)
+
+*Completed as a course project for CS 534 - Artificial Intelligence at Worcester Polytechnic Institute (WPI).*
+
+Link to full report: [Final Report](./Final%20Report.pdf)
+
 
 # Usage
 
